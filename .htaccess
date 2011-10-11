@@ -1,0 +1,17 @@
+Options +FollowSymLinks +ExecCGI -MultiViews
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+
+  # we check if the file is here (caching)
+  RewriteCond %{REQUEST_FILENAME} !-f
+
+  # no, so we redirect to our front web controller
+  RewriteRule ^(.*)$ index.php [QSA,L]
+
+</IfModule>
+<IfModule mod_deflate.c>
+<FilesMatch "\.(js|css|rdf)$">
+SetOutputFilter DEFLATE
+</FilesMatch>
+</IfModule>
