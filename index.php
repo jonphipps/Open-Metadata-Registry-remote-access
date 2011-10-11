@@ -14,22 +14,9 @@
 //$_SERVER["HTTP_IF_MODIFIED_SINCE"] = 'Fri, 01 Apr 2009 00:11:33 GMT';
 
 //uri
-//$_SERVER['REQUEST_URI'] = '/terms/motionpicturebas.rdf';
-//$_SERVER['REQUEST_URI'] = '/terms/motionpicturebas#i.rdf';
-//$_SERVER['REQUEST_URI'] = '/terms/motionpicturebas#i';
-//$_SERVER['REQUEST_URI'] = '/terms/microformbas#d';
-//$_SERVER['REQUEST_URI'] = '/terms/motionpicturebas/foo.rdf'
-//$_SERVER['REQUEST_URI'] = '/elements/63X.rdf';
-//$_SERVER['REQUEST_URI'] = '/elements/00X/M006a12';
-//$_SERVER['REQUEST_URI'] = '/elements/00X/M006a12.rdf';
-
-define('INSIGHT_IPS', '*');  // <- Your IP here for extra security
-define('INSIGHT_AUTHKEYS', '921A2DBC6ED927C5A2BB91C48AB04054');
-define('INSIGHT_PATHS', dirname(__FILE__));
-define('INSIGHT_SERVER_PATH', '/');
-
-// If using ZIP Archive
-//require_once('firephplib/FirePHP/Init.php');
+//$_SERVER['REQUEST_URI'] = '/RDARelationshipsWEMI.rdf';
+//$_SERVER['REQUEST_URI'] = '/termLIst/frequency/1007.rdf';
+//$_SERVER['REQUEST_URI'] = '/termLIst/frequency/1007';
 
 //****************************************
 //...for testing
@@ -37,11 +24,11 @@ define('INSIGHT_SERVER_PATH', '/');
 
 
 //setup
-//$registryUrl= "marc21rdf:81";
-//$apiUrl = "http://registry:81/api/";
+//$apiUrl = "http://50.56.57.42/api/";
 $registryUrl= "http://metadataregistry.org";
 $apiUrl = $registryUrl . "/api/";
-$domain = "http://marc21rdf.info";
+//$apiUrl = "http://registry:81/api/";
+$domain = "http://rdvocab.info";
 $useFopen = false;
 //time between update checks
 $updateInterval = 300; // 5 minutes * 60 seconds
@@ -56,23 +43,29 @@ $data['vocabs']  = getLocalData("vocabs");
 
 //special handler for hash URIs, replaces only the first instance of hash token with hash
 $_SERVER['REQUEST_URI'] = preg_replace('/%23(.+)/', '#$1', $_SERVER['REQUEST_URI']);
-
 //if the request is for vocab/schema rdf
 $_SERVER['REQUEST_URI'] = rtrim($_SERVER['REQUEST_URI'], "/#");
 
 $urlParsed = parse_url($_SERVER['REQUEST_URI']);
 if (!empty($urlParsed['path'])) //we can skip everything else and display html, at least in this domain
 {
-
+  //@todo these could be moved to a one-time install script
+  if (!is_dir($dataFolder))
+  {
+    mkdir($dataFolder);
+  }
+  if (!is_dir($cacheFolder))
+  {
+    mkdir($cacheFolder);
+  }
   $path = pathinfo($urlParsed['path']);
-
   //if there's a hash URI, then we have to look for the extension
   if (isset($urlParsed['fragment']))
   {
     $fragParts = explode(".", $urlParsed['fragment']);
     if (isset($fragParts[1]))
     {
-      $path['extension'] = preg_replace('/\?.*$/', '', $fragParts[1]);
+    $path['extension'] = preg_replace('/\?.*$/', '', $fragParts[1]);
     }
   }
 	if (DIRECTORY_SEPARATOR == $path['dirname'])
@@ -82,118 +75,120 @@ if (!empty($urlParsed['path'])) //we can skip everything else and display html, 
   $pathParts = explode("/", ltrim($path['dirname'],"/"));
   //if it's a fragment write it in the cache folder
   $writeFolder = (count($pathParts) <= 1) ? $dataFolder : $cacheFolder ;
-  $url = strtolower($domain . $_SERVER['REQUEST_URI']);
+$url = strtolower($domain . $_SERVER['REQUEST_URI']);
   $uri = strtolower($domain . $path['dirname'] . "/" . $path['filename']);
   $filePath = $writeFolder . $path['dirname'] . DIRECTORY_SEPARATOR . $path['filename'];
 
-  //is it a legit uri? (not sure yet)
-  //check the class, based solely on pathparts count
+
+//is it a legit uri? (not sure yet)
+//check the class, based solely on pathparts count
 	$class='';
 	$testUri = strtolower($domain . $path['dirname'] . "/" . $path['filename']);
 	if (array_key_exists($testUri, $data['schemas']))
-    {
-      $class = "schema";
+  {
+    $class = "schema";
       $touchTime = $data['schemas'][$uri]['lastUpdate'];
-    }
+  }
 	if (array_key_exists($testUri, $data['vocabs']))
-    {
-      $class = "concept_scheme";
+  {
+    $class = "concept_scheme";
       $touchTime = $data['vocabs'][$uri]['lastUpdate'];
-    }
+  }
 	/**
 	* @todo this has to be tested against marc21rdf hash URIs, since this doesn't appear to be generic
 	**/
-    $testUri = strtolower($domain . $path['dirname']);
+  $testUri = strtolower($domain . $path['dirname']);
     if (array_key_exists($testUri, $data['schemas']))
-    {
-      $class = "schema_property";
+  {
+    $class = "schema_property";
       $touchTime = $data['schemas'][$testUri]['lastUpdate'];
-    }
-    if (array_key_exists($testUri, $data['vocabs']))
-    {
-      $class = "concept";
+  }
+  if (array_key_exists($testUri, $data['vocabs']))
+  {
+    $class = "concept";
       $touchTime = $data['vocabs'][$testUri]['lastUpdate'];
   }
+}
 
-  if ($class)
+if ($class)
+{
+  if (!isset($path['extension']))
   {
-    if (!isset($path['extension']))
+    //we do conneg to get one
+    require_once './conneg/omrConneg_class.php';
+    //we have to get the best variant based on the request
+    $path['extension'] = omrConneg::getPreferredVariant();
+    //and redirect if not html
+    if (in_array($path['extension'], array('rdf', 'xsd')))
     {
-      //we do conneg to get one
-      require_once './conneg/omrConneg_class.php';
-      //we have to get the best variant based on the request
-      $path['extension'] = omrConneg::getPreferredVariant();
-      //and redirect if not html
-      if (in_array($path['extension'], array('rdf', 'xsd')))
-      {
-        header("Location: " . $_SERVER['REQUEST_URI'] . "." . $path['extension'], true, 303);
-        exit();
-      }
+      header("Location: " . $_SERVER['REQUEST_URI'] . "." . $path['extension'], true, 303);
+      exit();
     }
+  }
 
     if (in_array($path['extension'], array('rdf', 'xsd')))
     {
-      $apiUrl .= "get?class=" . $class;
-      $apiUrl .= "&type=" . $path['extension'];
-      $apiUrl .= "&uri=" . rawurlencode($uri);
+  $apiUrl .= "get?class=" . $class;
+  $apiUrl .= "&type=" . $path['extension'];
+  $apiUrl .= "&uri=" . rawurlencode($uri);
 
 			$filePath .=  "." . $path['extension'];
-      //check for the dir and create if needed
+    //check for the dir and create if needed
       if (!is_dir($writeFolder . DIRECTORY_SEPARATOR . $pathParts[0]))
-      {
+    {
         mkdir($writeFolder . DIRECTORY_SEPARATOR . $pathParts[0]);
-      }
+    }
       if (!is_dir($writeFolder . $path['dirname']))
-      {
+    {
         mkdir($writeFolder . $path['dirname']);
-      }
+    }
 
-      //check for the local file and create if needed
+    //check for the local file and create if needed
       //$fileExists = file_exists($filePath);
 
       if (!file_exists($filePath) || (filemtime($filePath) < $touchTime)) //get the rdf from the server
-      {
-        $file = getData($apiUrl);
-        if ($file)
-        {
-          $success = file_put_contents($filePath, $file);
-          touch($filePath, $touchTime);
-          //$file = file_get_contents($filePath);
-        }
-      }
-      else
-      {
-        $file = file_get_contents($filePath);
-      }
-
+    {
+      $file = getData($apiUrl);
       if ($file)
       {
-        //set the correct header
-        $rdf = ('rdf' == $path['extension']) ? "rdf+" : '';
-        //ob_start('ob_gzhandler');
-        header("Content-Type: application/" . $rdf . "xml; charset=utf-8");
-        header("Vary: Accept");
-        header("Content-Location: " . $url);
-        header("last-modified: " . gmdate("D, d M Y H:i:s", filemtime($filePath)) . " GMT");
-        //set max-age to 2 days
-        header("Cache-Control: max-age=172800, public, must-revalidate");
-        header('Content-Length: ' . filesize($filePath));
-        echo $file;
-        //ob_end_flush();
-
+        $success = file_put_contents($filePath, $file);
+        touch($filePath, $touchTime);
+          //$file = file_get_contents($filePath);
       }
-      else
-      {
-        //debug_print_backtrace();
-        header(' ', true, 404);
-      }
-
-      exit();
+    }
+    else
+    {
+      $file = file_get_contents($filePath);
     }
 
-    //html requests get redirected to registry
-    if ('html' == $path['extension'])
+    if ($file)
     {
+      //set the correct header
+      $rdf = ('rdf' == $path['extension']) ? "rdf+" : '';
+      //ob_start('ob_gzhandler');
+      header("Content-Type: application/" . $rdf . "xml; charset=utf-8");
+      header("Vary: Accept");
+      header("Content-Location: " . $url);
+      header("last-modified: " . gmdate("D, d M Y H:i:s", filemtime($filePath)) . " GMT");
+      //set max-age to 2 days
+      header("Cache-Control: max-age=172800, public, must-revalidate");
+      header('Content-Length: ' . filesize($filePath));
+      echo $file;
+      //ob_end_flush();
+
+    }
+    else
+    {
+      //debug_print_backtrace();
+      header(' ', true, 404);
+    }
+
+    exit();
+  }
+
+  //html requests get redirected to registry
+  if ('html' == $path['extension'])
+  {
       //if there's a fragment, we have to look it up as the next level down
       $part = '';
       if (isset($fragParts[0]))
@@ -205,21 +200,21 @@ if (!empty($urlParsed['path'])) //we can skip everything else and display html, 
       $apiUrl .= "get?class=" . $class;
       $apiUrl .= "&type=" . $path['extension'];
       $apiUrl .= "&uri=" . rawurlencode($uri);
-      $url = getData($apiUrl);
-      //this should return just redirect the URL to the registry
-      if ($url)
-      {
-        header("Location: " . $url, true, 303);
-      }
-      else
-      {
-        //debug_print_backtrace();
-        header(' ', true, 404);
-      }
-
-      exit();
+    $url = getData($apiUrl);
+    //this should return just redirect the URL to the registry
+    if ($url)
+    {
+      header("Location: " . $url, true, 303);
     }
+    else
+    {
+      //debug_print_backtrace();
+      header(' ', true, 404);
+    }
+
+    exit();
   }
+}
 }
 
 //else display the local data as html
@@ -232,7 +227,7 @@ foreach ($data['schemas'] as $key => $value)
 $html .=
 <<<HTML
                   <tr>
-                    <td colspan="6"><h3 style="margin-top: 10px; padding: 0;">MARC21 Vocabularies</h3></td>
+                    <td colspan="6"><h3 style="margin-top: 10px; padding: 0;">RDA Vocabularies</h3></td>
                   </tr>
 HTML;
 foreach ($data['vocabs'] as $key => $value)
@@ -296,15 +291,6 @@ function getLocalData($type)
 {
   global $apiUrl, $domain, $useFopen, $updateInterval, $dataFolder, $forceReload;
 
-  //@todo these could be moved to a one-time install script
-  if (!is_dir($dataFolder))
-  {
-    mkdir($dataFolder);
-  }
-  if (!is_dir($cacheFolder))
-  {
-    mkdir($cacheFolder);
-  }
   $filePath  = $dataFolder . DIRECTORY_SEPARATOR . $type . "data.dat";
   $checkPath = $dataFolder . DIRECTORY_SEPARATOR . $type . "check";
 
@@ -367,19 +353,17 @@ function getRow($value, $type)
   $local['vocabs']['listLabel']  = "Concept list" ;
   $local['schemas']['show']      = "schema/show/id" ;
   $local['vocabs']['show']       = "vocabulary/show/id" ;
-
   $history = $local[$type]['history'];
   $list = $local[$type]['list'];
   $listLabel = $local[$type]['listLabel'];
   $show = $local[$type]['show'];
-
   $id = $value['id'];
   $count = $value['count'];
   $name = htmlspecialchars($value['name']);
   $note = htmlspecialchars($value['note']);
   $status = $value['status'];
   $title = $note ? 'title="' . $note . '"': '';
-  $noteImage = $note ? '<img alt="note" align="top" title="' . $note . '" src="images/note2.gif" style="width: 8px; height: 10px;" />' : '' ;
+	$noteImage = $note ? '<img alt="note" align="top" title="' . $note . '" src="/images/note2.gif" style="width: 8px; height: 10px;" />' : '' ;
   $uri = $value['uri'];
   $html =
   <<<HTML
@@ -411,4 +395,3 @@ function lc(&$value, $key)
 }
 
 exit;
-
