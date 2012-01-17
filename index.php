@@ -28,7 +28,7 @@
 $registryUrl= "http://metadataregistry.org";
 $apiUrl = $registryUrl . "/api/";
 //$apiUrl = "http://registry:81/api/";
-$domain = "http://rdvocab.info";
+$domain = "http://iflastandards.info/ns/isbd";
 $useFopen = false;
 //time between update checks
 $updateInterval = 300; // 5 minutes * 60 seconds
@@ -215,7 +215,7 @@ if ($class)
     exit();
   }
 }
-}
+
 
 //else display the local data as html
 require_once 'header.inc';
