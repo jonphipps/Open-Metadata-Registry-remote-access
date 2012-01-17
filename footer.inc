@@ -23,30 +23,6 @@
                 </div>
               </div>
             </div>
-            <div id="gplus" style= "width:170px; text-align: left; margin-left: 20px; margin-top: -20px ">
-              <g:plusone size="medium"></g:plusone>
-
-              <script type="text/javascript">
-                (function() {
-                  var po = document.createElement('script'); po.type = 'text/javascript'; po.async = true;
-                  po.src = 'https://apis.google.com/js/plusone.js';
-                  var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(po, s);
-                })();
-              </script>
-              </div>
-            <div id="tweet" style= "width:170px; text-align: left; margin-left: 20px; margin-top: 10px;">
-            <a href="http://twitter.com/share" class="twitter-share-button" data-text="RDA RDF Vocabularies!" data-count="horizontal" data-via="jonphipps" data-related="RDAVocabs:RDA Vocabularies">Tweet</a><script type="text/javascript" src="http://platform.twitter.com/widgets.js"></script>
-            </div>
-            <div id="facebook" style= "width:170px; text-align: left; margin-left: 20px; margin-top: 10px;">
-            <div id="fb-root"></div>
-            <script>(function(d){
-  var js, id = 'facebook-jssdk'; if (d.getElementById(id)) {return;}
-              js = d.createElement('script'); js.id = id; js.async = true;
-              js.src = "//connect.facebook.net/en_US/all.js#appId=217675834954665&xfbml=1";
-              d.getElementsByTagName('head')[0].appendChild(js);
-            }(document));</script>
-<div class="fb-like" data-href="http://rdvocab.info" data-send="false" data-layout="box_count" data-width="140" data-show-faces="false" data-font="tahoma"></div>
-            </div>
           </td>
         </tr>
       </table>
