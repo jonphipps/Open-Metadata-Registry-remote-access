@@ -3,22 +3,21 @@
   <head>
     <meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
     <meta content="text/css" http-equiv="Content-Style-Type" />
-    <meta content="The Registry! :: RDA Vocabularies" name="title" />
+    <meta content="The Registry! :: ISBD Vocabularies" name="title" />
     <meta content="index,follow" name="robots" />
-    <meta content="The Open Metadata Registry Project Resource Description and Access (RDA) Vocabularies" name="description" />
-    <meta content="semantic web, registry, rdf, skos, metadata, RDA" name="keywords" />
+    <meta content="The Open Metadata Registry Project ISBD Vocabularies" name="description" />
+    <meta content="semantic web, registry, rdf, skos, metadata, ISBD" name="keywords" />
     <meta content="en" name="language" />
-    <meta name="google-site-verification" content="ZXoDE_VnATq1kQN0nVbKR2lNo2EmJLL6fkKpFXZmIk4" />
-    <meta itemprop="name" content="RDA Elements and Vocabularies" />
-    <meta itemprop="description" content="Properties and concepts from the Resource Description and Access (RDA) documentation, available in human-readable and machine readable forms with URIs" />
+    <meta itemprop="name" content="ISBD Elements and Vocabularies" />
+    <meta itemprop="description" content="Properties and concepts from ISBD, available in human-readable and machine readable forms with URIs" />
 
-    <title>The Registry! :: RDA</title>
+    <title>The Registry! :: ISBD</title>
     <link href="registry_favicon_beta.ico" rel="shortcut icon" />
     <link href="http://metadataregistry.org/blog/category/registry-development/the-registry/feed/rdf" rel="alternate" title="Registry News RSS 1.0 (RDF)" type="application/rss+xml" />
     <link href="http://metadataregistry.org/blog/category/registry-development/the-registry/feed" rel="alternate" title="Registry News RSS 2.0" type="application/rss+xml" />
     <link href="http://metadataregistry.org/blog/category/registry-development/the-registry/feed/atom" rel="alternate" title="Registry News Atom 1.0" type="application/atom+xml" />
-		<link href="/css/main.css" media="screen" rel="stylesheet" type="text/css" />
-		<link href="/css/layout.css" media="screen" rel="stylesheet" type="text/css" />
+		<link href="css/main.css" media="screen" rel="stylesheet" type="text/css" />
+		<link href="css/layout.css" media="screen" rel="stylesheet" type="text/css" />
  <script type="text/javascript">
 
   var _gaq = _gaq || [];
@@ -41,7 +40,7 @@
         <li class="last"><a href="http://metadataregistry.org/about.html">about</a></li>
       </ul>
       <div style="padding-left: 10px;">
-				<a href="http://metadataregistry.org/"><img align="left" alt="registry" src="/images/open_metadata_logo_with_interoperability.png" /></a>
+				<a href="http://metadataregistry.org/"><img align="left" alt="registry" src="images/open_metadata_logo_with_interoperability.png" /></a>
       </div>
       <div id="search">
         <table>
@@ -64,10 +63,10 @@
           <td class="left">
             <div class="Left" id="content_main">
               <div id="home" style="margin-left:auto;margin-right:auto;">
-                <h1>The RDA (Resource Description and Access) Vocabularies</h1> 
-				This page provides quick links for the Registered RDA Element Sets and Value Vocabularies. <br />
+                <h1>The ISBD Vocabularies</h1> 
+				This page provides quick links for the Registered ISBD Element Sets and Value Vocabularies. <br />
 				Each set of elements or vocabulary concepts has a link to the general description as well as a link to a list of elements or concepts. 
 				<table border="0" cellpadding="0" cellspacing="3">
                   <tr>
-                    <td colspan="6"><h3 style="margin-top:10px; padding: 0;">RDA Element Sets</h3></td>
+                    <td colspan="6"><h3 style="margin-top:10px; padding: 0;">ISBD Element Sets</h3></td>
                   </tr>
