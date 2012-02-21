@@ -14,9 +14,13 @@
   //$_SERVER["HTTP_IF_MODIFIED_SINCE"] = 'Fri, 01 Apr 2009 00:11:33 GMT';
 
   //uri
-  //$_SERVER['REQUEST_URI'] = '/RDARelationshipsWEMI.rdf';
+  //$_SERVER['REQUEST_URI'] = '/ns/isbd/elements.rdf';
   //$_SERVER['REQUEST_URI'] = '/termLIst/frequency/1007.rdf';
   //$_SERVER['REQUEST_URI'] = '/termLIst/frequency/1007';
+  require_once(dirname(__FILE__) . "/FirePHPCore-0.3.2/lib/FirePHPCore/FirePHP.class.php");
+  require_once(dirname(__FILE__) . "/FirePHPCore-0.3.2/lib/FirePHPCore/fb.php");
+  $firephp = FirePHP::getInstance(true);
+  $firephp->setEnabled(false);
 
   //****************************************
   //...for testing
@@ -28,7 +32,10 @@
   $registryUrl = "http://metadataregistry.org";
   $apiUrl      = $registryUrl . "/api/";
   //$apiUrl = "http://registry:81/api/";
-  $domain   = "http://iflastandards.info/ns/isbd";
+  //the base DOMAIN of all URIs handled by this script (yes we could get this from the server)
+  $thisDomain   = "http://iflastandards.info";
+  //the base NAMESPACE of the FOLDER in which this script is running (yes we could get this from the server)
+  $thisNamespace  = "http://iflastandards.info/ns/isbd";
   $useFopen = false;
   //time between update checks
   $updateInterval = 300; // 5 minutes * 60 seconds
@@ -41,7 +48,7 @@
   $data['schemas'] = getLocalData("schemas");
   $data['vocabs']  = getLocalData("vocabs");
 
-  //special handler for hash URIs, replaces only the first instance of hash token with hash
+  special handler for hash URIs, replaces only the first instance of hash token with hash
   $_SERVER['REQUEST_URI'] = preg_replace('/%23(.+)/', '#$1', $_SERVER['REQUEST_URI']);
   //if the request is for vocab/schema rdf
   $_SERVER['REQUEST_URI'] = rtrim($_SERVER['REQUEST_URI'], "/#");
@@ -70,15 +77,23 @@
     $pathParts = explode("/", ltrim($path['dirname'], "/"));
     //if it's a fragment write it in the cache folder
     $writeFolder = (count($pathParts) <= 1) ? $dataFolder : $cacheFolder;
-    $url         = strtolower($domain . $_SERVER['REQUEST_URI']);
-    $uri         = strtolower($domain . $path['dirname'] . "/" . $path['filename']);
+    $url         = strtolower($thisDomain . $_SERVER['REQUEST_URI']);
+    $uri         = strtolower($thisDomain . $path['dirname'] . "/" . $path['filename']);
     $filePath    = $writeFolder . $path['dirname'] . DIRECTORY_SEPARATOR . $path['filename'];
+
+    $firephp->dump("url", $url);
+    $firephp->dump("uri",$uri);
+    $firephp->dump("path",$pathParts);
+    $firephp->dump("filepath",$filePath);
 
 
     //is it a legit uri? (not sure yet)
     //check the class, based solely on pathparts count
     $class   = '';
-    $testUri = strtolower($domain . $path['dirname'] . "/" . $path['filename']);
+    $testUri = strtolower($thisDomain . $path['dirname'] . "/" . $path['filename']);
+
+    $firephp->dump("testuri_92", $testUri);
+
     if (array_key_exists($testUri, $data['schemas'])) {
       $class     = "schema";
       $touchTime = $data['schemas'][$uri]['lastUpdate'];
@@ -90,7 +105,12 @@
     /**
      * @todo this has to be tested against marc21rdf hash URIs, since this doesn't appear to be generic
      **/
-    $testUri = strtolower($domain . $path['dirname']);
+    $testUri = strtolower($thisDomain . $path['dirname']);
+
+    $firephp->dump("testuri_105", $testUri);
+    $firephp->dump("domain",$thisDomain);
+    $firephp->dump("path",$path);
+
     if (array_key_exists($testUri, $data['schemas'])) {
       $class     = "schema_property";
       $touchTime = $data['schemas'][$testUri]['lastUpdate'];
@@ -267,7 +287,7 @@ HTML;
    */
   function getLocalData($type)
   {
-    global $apiUrl, $domain, $useFopen, $updateInterval, $dataFolder, $forceReload;
+    global $apiUrl, $thisNamespace, $useFopen, $updateInterval, $dataFolder, $forceReload;
 
     $filePath  = $dataFolder . DIRECTORY_SEPARATOR . $type . "data.dat";
     $checkPath = $dataFolder . DIRECTORY_SEPARATOR . $type . "check";
@@ -283,7 +303,7 @@ HTML;
 
     //only get the update if 5 minutes have elapsed (discourage churning)
     if ($checkTime < time()) {
-      $Url        = $apiUrl . "$type/lastupdate?domain=" . urlencode($domain);
+      $Url        = $apiUrl . "$type/lastupdate?domain=" . urlencode($thisNamespace);
       $dateRemote = getData($Url);
       touch($checkPath, time());
     }
@@ -291,7 +311,7 @@ HTML;
     //this should fail if we can't get the remote data, which is ok
     if ($dateRemote > $dateLocal) {
       //get update of all of the schema/vocab data for domain
-      $Url        = $apiUrl . "$type/getinfo?domain=" . urlencode($domain) . "&type=php";
+      $Url        = $apiUrl . "$type/getinfo?domain=" . urlencode($thisNamespace) . "&type=php";
       $remoteData = getData($Url);
       $data       = unserialize($remoteData);
       //save to file
