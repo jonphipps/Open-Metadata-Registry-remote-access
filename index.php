@@ -1,4 +1,5 @@
 <?php
+
   //debugbreak();
 
   //****************************************
@@ -65,6 +66,7 @@
   $urlParsed = parse_url($_SERVER['REQUEST_URI']);
   if (!empty($urlParsed['path'])) //we can skip everything else and display html, at least in this domain
   {
+    require "updateCheck.php";
     //@todo these could be moved to a one-time install script
     if (!is_dir($dataFolder)) {
       mkdir($dataFolder);

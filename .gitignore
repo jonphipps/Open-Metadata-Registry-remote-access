@@ -1,3 +1,5 @@
 .idea/
 cache/
 data
+/nbproject/
+*.log
