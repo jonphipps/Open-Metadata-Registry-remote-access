@@ -38,13 +38,13 @@
             <a href="http://twitter.com/share" class="twitter-share-button" data-text="RDA RDF Vocabularies!" data-count="horizontal" data-via="jonphipps" data-related="RDAVocabs:RDA Vocabularies">Tweet</a><script type="text/javascript" src="http://platform.twitter.com/widgets.js"></script>
             </div>
             <div id="facebook" style= "width:170px; text-align: left; margin-left: 20px; margin-top: 10px;">
-            <div id="fb-root"></div>
-            <script>(function(d){
+<div id="fb-root"></div>
+<script>(function(d){
   var js, id = 'facebook-jssdk'; if (d.getElementById(id)) {return;}
-              js = d.createElement('script'); js.id = id; js.async = true;
-              js.src = "//connect.facebook.net/en_US/all.js#appId=217675834954665&xfbml=1";
-              d.getElementsByTagName('head')[0].appendChild(js);
-            }(document));</script>
+  js = d.createElement('script'); js.id = id; js.async = true;
+  js.src = "//connect.facebook.net/en_US/all.js#appId=217675834954665&xfbml=1";
+  d.getElementsByTagName('head')[0].appendChild(js);
+}(document));</script>
 <div class="fb-like" data-href="http://rdvocab.info" data-send="false" data-layout="box_count" data-width="140" data-show-faces="false" data-font="tahoma"></div>
             </div>
           </td>
@@ -59,13 +59,23 @@
   var asset_host = is_ssl ? "https://s3.amazonaws.com/getsatisfaction.com/" : "http://s3.amazonaws.com/getsatisfaction.com/";
   document.write(unescape("%3Cscript src='" + asset_host + "javascripts/feedback-v2.js' type='text/javascript'%3E%3C/script%3E"));
 </script>
+
 <script type="text/javascript" charset="utf-8">
   var feedback_widget_options = {};
+
   feedback_widget_options.display = "overlay";  
   feedback_widget_options.company = "managemetadata";
   feedback_widget_options.placement = "right";
   feedback_widget_options.color = "#D8732F";
   feedback_widget_options.style = "idea";
+  
+  
+  
+  
+  
+  
+  
+
   var feedback_widget = new GSFN.feedback_widget(feedback_widget_options);
 </script>  </body>
 </html>
