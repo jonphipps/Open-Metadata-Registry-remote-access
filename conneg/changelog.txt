@@ -69,3 +69,9 @@ Changelog:
      - Fix for conNeg::sortTypes() where the incorrect sort parameters would be
        generated if the application does not provide quality factors, thanks go
        to seb (http://sebashton.com/) for this fix.
+
+2012-01-01 - Version 2.0.2
+     - Fix for call to conNeg::sortTypes() where no non-wildcard type is
+       provided by the User Agent and the application isn't providing it's own
+       list of types. Thanks to Ben Companjen for the report that brought this
+       to my attention.

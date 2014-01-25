@@ -2,8 +2,8 @@
 
 /****************************************************************************
 	*																		*
-	*	Version: content_negotiation.inc.php v2.0.1 2011-03-31				*
-	*	Copyright: (c) 2006-2009 ptlis										*
+	*	Version: content_negotiation.inc.php v2.0.2 2012-01-01				*
+	*	Copyright: (c) 2006-2012 ptlis										*
 	*	Licence: GNU Lesser General Public License v2.1						*
 	*	The current version of this library can be sourced from:			*
 	*		http://ptlis.net/source/php/content-negotiation/#downloads		*
@@ -105,13 +105,16 @@
 		static private function genericNeg($field, $returnType, $rawAppTypes=null, $productVals=true, $mimeNeg=false) {
 			// List of accept-extension tokens, required for mime negotiation
 			// sorting
-			$appAcceptExtens	= array();
-			$userAcceptExtens	= array();
+			$userAcceptExtens		= array();
+			$appAcceptExtens		= array();
+
+			$userNonWildcardProvided	= false;
+			$appNonWildcardProvided		= false;
 
 			$field		= strtolower($field);
 
 			// Attempt to parse field into multi-dimensional array.
-			list($userTypes, $userAcceptExtens) = self::parseField($field, $mimeNeg);
+			list($userTypes, $userAcceptExtens, $userNonWildcardProvided) = self::parseField($field, $mimeNeg);
 			if(!$userTypes) {
 				return false;
 			}
@@ -125,7 +128,7 @@
 			// Parse application provided string as field.
 			else if($rawAppTypes) {
 
-				list($appTypes, $appAcceptExtens) = self::parseField($rawAppTypes, $mimeNeg, false);
+				list($appTypes, $appAcceptExtens, $appNonWildcardProvided) = self::parseField($rawAppTypes, $mimeNeg, false);
 
 				// Unable to parse string as field
 				if(!$appTypes) {
@@ -145,127 +148,135 @@
 				$appTypes			= array();
 			}
 
-			// Iterate through user agent types.
-			for($i = 0; $i < count($userTypes['type']); $i++) {
+			// Only continue processing field if there are non-wildcard types provided either by the User-Agent or Application.
+			if($appNonWildcardProvided || $userNonWildcardProvided) {
 
-				// No application type data was provided, store all non-wildcard
-				// types.
-				if(!$appVals) {
-					if($mimeNeg && ($userTypes['mimeType'][$i] == '*' || ($userTypes['mimeSubtype'][$i] == '*'))
-							|| !$mimeNeg && $userTypes['type'][$i] == '*') {
-						continue;
-					}
+				// Iterate through user agent types.
+				for($i = 0; $i < count($userTypes['type']); $i++) {
 
-					$appTypes['type'][$i]			= $userTypes['type'][$i];
-					$appTypes['qFactorUser'][$i]	= $userTypes['qFactorUser'][$i];
-
-					// Handle the accept-extension tokens for mime neg
-					if($mimeNeg) {
-						$appTypes['acceptExtens'][$i]	= $userTypes['acceptExtens'][$i];
-						// Store any accept-extension tokens
-						for($j = 0; $j < count($userAcceptExtens); $j++) {
-							$appTypes[$userAcceptExtens[$j]][$i]	= $userTypes[$userAcceptExtens[$j]][$i];
+					// No application type data was provided, store all non-wildcard
+					// types.
+					if(!$appVals) {
+						if($mimeNeg && ($userTypes['mimeType'][$i] == '*' || ($userTypes['mimeSubtype'][$i] == '*'))
+								|| !$mimeNeg && $userTypes['type'][$i] == '*') {
+							continue;
 						}
-					}
-				}
 
-				// Set UA q factor as apprpriate following rules of specificness
-				// (match > mime subtype wildcard match > wildcard match)
-				else {
+						$appTypes['type'][$i]			= $userTypes['type'][$i];
+						$appTypes['qFactorUser'][$i]	= $userTypes['qFactorUser'][$i];
 
-					// Exact match for the current type
-					if(($key = array_search($userTypes['type'][$i], $appTypes['type'])) !== false) {
-						// Mime negotation requires accept-extension handling
+						// Handle the accept-extension tokens for mime neg
 						if($mimeNeg) {
-							// Handle ua-provided type with no accept-extens
-							if($appTypes['extensMatch'][$key] == self::EXTENS_DEFAULT && !$appTypes['acceptExtens'][$key]) {
+							$appTypes['acceptExtens'][$i]	= $userTypes['acceptExtens'][$i];
+							// Store any accept-extension tokens
+							for($j = 0; $j < count($userAcceptExtens); $j++) {
+								$appTypes[$userAcceptExtens[$j]][$i]	= $userTypes[$userAcceptExtens[$j]][$i];
+							}
+						}
+					}
+
+					// Set UA q factor as apprpriate following rules of specificness
+					// (match > mime subtype wildcard match > wildcard match)
+					else {
+
+						// Exact match for the current type
+						if(($key = array_search($userTypes['type'][$i], $appTypes['type'])) !== false) {
+							// Mime negotation requires accept-extension handling
+							if($mimeNeg) {
+								// Handle ua-provided type with no accept-extens
+								if($appTypes['extensMatch'][$key] == self::EXTENS_DEFAULT && !$appTypes['acceptExtens'][$key]) {
+									$appTypes['specificness'][$key]	= self::WILDCARD_NONE;
+									$appTypes['qFactorUser'][$key]	= $userTypes['qFactorUser'][$i];
+									$appTypes['extensMatch'][$key]	= self::EXTENS_NONE;
+								}
+
+								// Handle accept-extension match
+								else if($appTypes['acceptExtens'][$key] && $appTypes[$appTypes['acceptExtens'][$key]][$key] == $appTypes[$appTypes['acceptExtens'][$key]][$key]) {
+									$appTypes['specificness'][$key]	= self::WILDCARD_NONE;
+									$appTypes['qFactorUser'][$key]	= $userTypes['qFactorUser'][$i];
+									$appTypes['extensMatch'][$key]	= self::EXTENS_MATCH;
+								}
+							}
+							else {
 								$appTypes['specificness'][$key]	= self::WILDCARD_NONE;
 								$appTypes['qFactorUser'][$key]	= $userTypes['qFactorUser'][$i];
-								$appTypes['extensMatch'][$key]	= self::EXTENS_NONE;
-							}
-
-							// Handle accept-extension match
-							else if($appTypes['acceptExtens'][$key] && $appTypes[$appTypes['acceptExtens'][$key]][$key] == $appTypes[$appTypes['acceptExtens'][$key]][$key]) {
-								$appTypes['specificness'][$key]	= self::WILDCARD_NONE;
-								$appTypes['qFactorUser'][$key]	= $userTypes['qFactorUser'][$i];
-								$appTypes['extensMatch'][$key]	= self::EXTENS_MATCH;
 							}
 						}
-						else {
-							$appTypes['specificness'][$key]	= self::WILDCARD_NONE;
-							$appTypes['qFactorUser'][$key]	= $userTypes['qFactorUser'][$i];
-						}
-					}
 
-					// Mime neg is being performed with a type and subtype
-					// wildcard or any other negotiation is being performed with
-					// a type wildcard.
-					else if($mimeNeg && $userTypes['mimeType'][$i] == '*' && $userTypes['mimeSubtype'][$i] == '*'
-							|| (!$mimeNeg && $userTypes['type'][$i] == '*')) {
+						// Mime neg is being performed with a type and subtype
+						// wildcard or any other negotiation is being performed with
+						// a type wildcard.
+						else if($mimeNeg && $userTypes['mimeType'][$i] == '*' && $userTypes['mimeSubtype'][$i] == '*'
+								|| (!$mimeNeg && $userTypes['type'][$i] == '*')) {
 
-						// Iterate through all app types updating the q factors
-						// if no user type has yet matched them.
-						for($j = 0; $j < count($appTypes['type']); $j++) {
-							if($appTypes['specificness'][$j] == self::WILDCARD_DEFAULT) {
-								$appTypes['specificness'][$j]	= self::WILDCARD_TYPE;
-								$appTypes['qFactorUser'][$j]	= $userTypes['qFactorUser'][$i];
+							// Iterate through all app types updating the q factors
+							// if no user type has yet matched them.
+							for($j = 0; $j < count($appTypes['type']); $j++) {
+								if($appTypes['specificness'][$j] == self::WILDCARD_DEFAULT) {
+									$appTypes['specificness'][$j]	= self::WILDCARD_TYPE;
+									$appTypes['qFactorUser'][$j]	= $userTypes['qFactorUser'][$i];
+								}
 							}
 						}
-					}
 
-					// Mime negotiation is being performed and the subtype is
-					// a wildcard, iterate through $appTypes updating the q
-					// factors of all app types that haven't yet been exactly
-					// matched.
-					else if($mimeNeg && $userTypes['mimeSubtype'] == '*') {
-						for($j = 0; $j < count($appTypes['type']); $j++) {
-							if($appTypes['specificness'][$j] <= self::WILDCARD_TYPE) {
-								$appTypes['specificness'][$j]	= self::WILDCARD_SUBTYPE;
-								$appTypes['qFactorUser'][$j]	= $userTypes['qFactorUser'][$i];
+						// Mime negotiation is being performed and the subtype is
+						// a wildcard, iterate through $appTypes updating the q
+						// factors of all app types that haven't yet been exactly
+						// matched.
+						else if($mimeNeg && $userTypes['mimeSubtype'] == '*') {
+							for($j = 0; $j < count($appTypes['type']); $j++) {
+								if($appTypes['specificness'][$j] <= self::WILDCARD_TYPE) {
+									$appTypes['specificness'][$j]	= self::WILDCARD_SUBTYPE;
+									$appTypes['qFactorUser'][$j]	= $userTypes['qFactorUser'][$i];
+								}
 							}
 						}
 					}
 				}
-			}
 
-			// Calculate product of q factors
-			if($productVals && $appVals) {
-				for($i = 0; $i < count($appTypes['type']); $i++) {
-					$appTypes['qFactorProduct'][$i]	= $appTypes['qFactorUser'][$i] * $appTypes['qFactorApp'][$i];
+				// Calculate product of q factors
+				if($productVals && $appVals) {
+					for($i = 0; $i < count($appTypes['type']); $i++) {
+						$appTypes['qFactorProduct'][$i]	= $appTypes['qFactorUser'][$i] * $appTypes['qFactorApp'][$i];
+					}
 				}
-			}
 
-			// Sort the datastructure
-			self::sortTypes($appTypes, $productVals, $appVals, $appAcceptExtens);
+				// Sort the datastructure
+				self::sortTypes($appTypes, $productVals, $appVals, $appAcceptExtens);
 
-			// Cleanup working data from the datastructure
-			unset($appTypes['mimeType']);
-			unset($appTypes['mimeSubtype']);
-			unset($appTypes['specificness']);
-			unset($appTypes['acceptExtens']);
-			unset($appTypes['extensMatch']);
+				// Cleanup working data from the datastructure
+				unset($appTypes['mimeType']);
+				unset($appTypes['mimeSubtype']);
+				unset($appTypes['specificness']);
+				unset($appTypes['acceptExtens']);
+				unset($appTypes['extensMatch']);
 
-			if(array_key_exists('accepExtens', $appTypes)) {
-				for($i = 0; $i < count($appTypes['acceptExtens']); $i++) {
-					for($j = 0; $j < count($appAcceptExtens); $j++) {
-						if($appTypes[$appAcceptExtens[$j]][$i] === null) {
-							unset($appTypes[$appAcceptExtens[$j]][$i]);
+				if(array_key_exists('accepExtens', $appTypes)) {
+					for($i = 0; $i < count($appTypes['acceptExtens']); $i++) {
+						for($j = 0; $j < count($appAcceptExtens); $j++) {
+							if($appTypes[$appAcceptExtens[$j]][$i] === null) {
+								unset($appTypes[$appAcceptExtens[$j]][$i]);
+							}
 						}
 					}
 				}
+
+				// Return appropriate data
+				switch($returnType) {
+					case 'all':
+						return $appTypes;
+						break;
+					case 'best':
+						return $appTypes['type'][0];
+						break;
+					default:
+						return false;
+						break;
+				}
 			}
 
-			// Return appropriate data
-			switch($returnType) {
-				case 'all':
-					return $appTypes;
-					break;
-				case 'best':
-					return $appTypes['type'][0];
-					break;
-				default:
-					return false;
-					break;
+			else {
+				return false;
 			}
 		}
 
@@ -308,9 +319,10 @@
  *			the function into two arrays.
  */
 		static protected function parseField($field, $mimeNeg, $uaField=true) {
-			$matches		= array();	// Raw result of regular expression.
-			$types			= array();	// Generated array of type data.
-			$acceptExtens	= array();	// Generated array of accept-extension tokens
+			$matches			= array();	// Raw result of regular expression.
+			$types				= array();	// Generated array of type data.
+			$acceptExtens		= array();	// Generated array of accept-extension tokens
+			$fullMimeProvided	= false;	// Whether a full (non-wildcard) mime is provided in $field
 
 			if($uaField) {
 				$qFactor	= 'qFactorUser';
@@ -337,7 +349,14 @@
 
 				// Normalise generated data structure
 				for($i = 0; $i < count($matches[0]); $i++) {
+
+					// Check to see if this mime has no wildcard component
+					if($matches[1][$i] != '*' && $matches[2][$i] != '*') {
+						$fullMimeProvided	= true;
+					}
+
 					$types['type'][$i]	= $matches[1][$i] . '/' . $matches[2][$i];
+
 					// Empty quality factors default to 1
 					if($matches[4][$i] != null) {
 						$types[$qFactor][$i]	= $matches[4][$i];
@@ -381,6 +400,12 @@
 
 				// Normalise generated data structure
 				for($i = 0; $i < count($matches[0]); $i++) {
+
+					// Check to see if this mime has no wildcard component
+					if($matches[1][$i] != '*') {
+						$fullMimeProvided	= true;
+					}
+
 					$types['type'][$i]	= $matches[1][$i];
 					if($matches[2][$i] != null) {
 						$types[$qFactor][$i]	= $matches[2][$i];
@@ -391,7 +416,7 @@
 				}
 			}
 
-			return array($types, $acceptExtens);
+			return array($types, $acceptExtens, $fullMimeProvided);
 		}
 
 
@@ -642,5 +667,3 @@
 			}
 		}
 }
-
-?>
