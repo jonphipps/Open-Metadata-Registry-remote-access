@@ -64,10 +64,10 @@
           <td class="left">
             <div class="Left" id="content_main">
               <div id="home" style="margin-left:auto;margin-right:auto;">
-                <h1>The RDA (Resource Description and Access) Vocabularies</h1> 
-				This page provides quick links for the Registered RDA Element Sets and Value Vocabularies. <br />
-				Each set of elements or vocabulary concepts has a link to the general description as well as a link to a list of elements or concepts. 
+                <h1>The RDA (Resource Description and Access) Vocabularies</h1>
+				<p>This page provides quick links for the Registered RDA Element Sets and Value Vocabularies. <br />
+				Each set of elements or vocabulary concepts has a link to the general description as well as a link to a list of elements or concepts. </p><p style="font-weight: bold; font-size: 1.5em">The latest version of the Element Sets can be found at <a href=" http://www.rdaregistry.info">www.rdaregistry.info</a></span></p>
 				<table border="0" cellpadding="0" cellspacing="3">
                   <tr>
-                    <td colspan="6"><h3 style="margin-top:10px; padding: 0;">RDA Element Sets</h3></td>
+                    <td colspan="6"><h3 style="margin-top:10px; padding: 0;">RDA Element Sets <span style="font-weight: bold; color: red">(Deprecated!)</span></h3></td>
                   </tr>
