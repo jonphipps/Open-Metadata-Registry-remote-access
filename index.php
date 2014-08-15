@@ -294,7 +294,7 @@ function getData($apiUrl)
 */
 function getLocalData($type)
 {
-  global $apiUrl, $domain, $useFopen, $updateInterval, $dataFolder, $forceReload;
+  global $apiUrl, $domain, $useFopen, $updateInterval, $dataFolder, $cacheFolder, $forceReload;
 
   //@todo these could be moved to a one-time install script
   if (!is_dir($dataFolder))
